@@ -1,0 +1,1 @@
+exports.DEVELOPER_TOKEN = 'MYTOKEN'; // https://dev.evernote.com/doc/articles/dev_tokens.php
