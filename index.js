@@ -16,10 +16,19 @@ const client = new Evernote.Client({
   for (let notebook of notebooks) {
     const count = await noteStore.findNoteCounts({ notebookGuid: notebook.guid }, false);
     const totalNotes = count.notebookCounts[notebook.guid];
-    console.log(notebook.name, totalNotes);
+    console.log(`\n*** ${notebook.name} ${totalNotes} ***`);
     const spec = { includeTitle: true, includeUpdated: true, includeContentLength: true };
     const metadata = await noteStore.findNotesMetadata({ notebookGuid: notebook.guid }, 0, 250, spec);
-    console.log(metadata.notes.map(notemeta => `${notemeta.title} - ${notemeta.contentLength}B - ${new Date(notemeta.updated)}`));
+
+    for (let notemeta of metadata.notes) {
+      console.log(`${notemeta.title} - ${notemeta.contentLength}B - ${new Date(notemeta.updated)} ${notemeta.guid}`);
+      const note = await noteStore.getNote(notemeta.guid, true, false, false, false);
+      if (note.resources) {
+        console.log(`Note has ${note.resources.length} resources`);
+      }
+      console.log(note.content);
+    }
+
   }
 })();
 
