@@ -6,8 +6,8 @@ const sanitise = require("./sanitise").sanitise;
 const sanitize = require("sanitize-filename");
 
 const client = new Evernote.Client({
-  sandbox: true, // change to false when you are ready to switch to production
-  china: false, // change to true if you wish to connect to YXBJ - most of you won't
+  sandbox: config.SANDBOX,
+  china: false,
   token: config.DEVELOPER_TOKEN
 });
 
@@ -59,11 +59,18 @@ const client = new Evernote.Client({
         // if this is the first run for the notebook 
         // or the note has been updated since the last time we processed the notebook, process it
         if (!lastProcessedDate || noteMeta.updated > lastProcessedDate) {
+
+          if (lastProcessedDate) {
+            console.debug(`Note updated since last processed: ${new Date(noteMeta.updated)} > ${lastProcessedDate}`);
+          }
+
           const note = await noteStore.getNote(noteMeta.guid, true, false, false, false);
           if (note.resources) {
             console.debug(`Note has ${note.resources.length} resources`);
           }
-          console.debug(note.content);
+          console.debug('Writing note');
+          const sanitisedNoteTitle = sanitise(sanitize(note.title));
+          fs.writeFileSync(`${sanitizedFileName}/${sanitisedNoteTitle}.xml`, note.content);
         }
 
         // if this is not the first run for the notebook and the note we have reached was updated 
@@ -79,7 +86,6 @@ const client = new Evernote.Client({
     // update the last processed time for the notebook
     console.debug('writing info.json');
     fs.writeFileSync(infoFileName, JSON.stringify({ processed: new Date().toISOString() }));
-
 
   }
 
