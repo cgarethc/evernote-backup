@@ -4,7 +4,7 @@
   "description": "Scripted Evernote backup",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "mkdir -p build && ./node_modules/.bin/esbuild index.js --platform=node --bundle --outfile=build/server.js"
   },
   "repository": {
     "type": "git",
@@ -21,5 +21,8 @@
     "emoji-strip": "^1.0.1",
     "remove-accents": "^0.4.2",
     "sanitize-filename": "^1.6.3"
+  },
+  "devDependencies": {
+    "esbuild": "^0.14.21"
   }
 }

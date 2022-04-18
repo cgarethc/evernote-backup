@@ -14,24 +14,25 @@ const client = new Evernote.Client({
 (async () => {
 
   if (!fs.existsSync('./files')) {
+    // create the output directory
     fs.mkdirSync('./files');
   }
 
-  var noteStore = client.getNoteStore();
-
+  const noteStore = client.getNoteStore();  
   const notebooks = await noteStore.listNotebooks();
-  let lastProcessedDate;
 
   for (let notebook of notebooks) {
 
-    const sanitizedFileName = `./files/${sanitise(sanitize(notebook.name))}`;
-    const infoFileName = `${sanitizedFileName}/info.json`;
-    console.debug('Checking if notebook exists on disk already', sanitizedFileName);
-    if (!fs.existsSync(sanitizedFileName)) {
+    let lastProcessedDate;
+
+    const sanitizedNotebookDirName = `./files/${sanitise(sanitize(notebook.name))}`;
+    const infoFileName = `${sanitizedNotebookDirName}/info.json`;
+    console.debug('Checking if notebook exists on disk already', sanitizedNotebookDirName);
+    if (!fs.existsSync(sanitizedNotebookDirName)) {
       // never seen this notebook before, create the directory for it
       console.debug(`Directory doesn't exist, creating it`);
       processThisNotebook = true;
-      fs.mkdirSync(sanitizedFileName);
+      fs.mkdirSync(sanitizedNotebookDirName);
     }
     else if (fs.existsSync(infoFileName)) {
       const info = JSON.parse(fs.readFileSync(infoFileName, 'utf8'));
@@ -65,12 +66,27 @@ const client = new Evernote.Client({
           }
 
           const note = await noteStore.getNote(noteMeta.guid, true, false, false, false);
-          if (note.resources) {
-            console.debug(`Note has ${note.resources.length} resources`);
+          const sanitisedNoteDirName = `${sanitizedNotebookDirName}/${sanitise(sanitize(note.title))}`;
+          if (note.resources) {            
+            if (!fs.existsSync(sanitisedNoteDirName)) {
+              // create a directory with same name as the note to hold the resources
+              fs.mkdirSync(sanitisedNoteDirName);
+            }
+            console.debug('Note resources', note.resources.map(resource => resource.guid));
+            // download the resources
+            for (let resource of note.resources) {
+              const resourceDownload = await noteStore.getResource(resource.guid, true, false, true, false);
+              const fileContent = resourceDownload.data.body;
+              const fileType = resourceDownload.mime;
+              const fileName = resourceDownload.attributes.fileName;
+              console.log(`Writing ${fileName} of type ${fileType} (${fileContent.length}B)`);
+              const sanitisedResourceFilename = `${sanitisedNoteDirName}/${sanitise(sanitize(fileName))}`;
+              fs.writeFileSync(sanitisedResourceFilename, fileContent);
+            }
           }
           console.debug('Writing note');
-          const sanitisedNoteTitle = sanitise(sanitize(note.title));
-          fs.writeFileSync(`${sanitizedFileName}/${sanitisedNoteTitle}.xml`, note.content);
+          // write the note content
+          fs.writeFileSync(`${sanitisedNoteDirName}.xml`, note.content);
         }
 
         // if this is not the first run for the notebook and the note we have reached was updated 
