@@ -145,6 +145,8 @@ const client = new Evernote.Client({
 
   }
 
+  console.info('Backup complete');
+
 })();
 
 
