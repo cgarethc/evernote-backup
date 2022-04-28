@@ -70,8 +70,10 @@ const client = new Evernote.Client({
 
         console.debug('calling with offset', counter);
 
-        // counter for unnamed media in the notes
+        // counter for unnamed or duplicate media in the notes
         let resourceCounter = 1;
+        // list of media names already seen
+        const mediaNames = [];
 
         const spec = { includeTitle: true, includeUpdated: true, includeContentLength: true };
         const metadata = await noteStore.findNotesMetadata({ notebookGuid: notebook.guid, order: 2, ascending: false }, counter, 250, spec);
@@ -101,9 +103,21 @@ const client = new Evernote.Client({
                 const resourceDownload = await noteStore.getResource(resource.guid, true, false, true, false);
                 const fileContent = resourceDownload.data.body;
                 const fileType = resourceDownload.mime;
-                const fileName = resourceDownload.attributes.fileName ? resourceDownload.attributes.fileName : `${resourceCounter++}.${fileType.split('/')[1]}`;
+                let fileName = resourceDownload.attributes.fileName ? resourceDownload.attributes.fileName : `${resourceCounter++}.${fileType.split('/')[1]}`;
+                
+                const nameWithoutExtension = fileName.split('.')[0];
+                if (mediaNames.includes(nameWithoutExtension)) {
+                  // duplicate media name, add a number to the end
+                  fileName = `${nameWithoutExtension}-${resourceCounter++}.${fileType.split('/')[1]}`;
+                }
+                else{
+                  mediaNames.push(nameWithoutExtension);
+                }
+                
                 console.log(`Writing ${fileName} of type ${fileType} (${fileContent.length}B)`);
-                const sanitisedResourceFilename = `${sanitisedNoteDirName}/${sanitise(sanitize(fileName))}`;
+                let sanitisedResourceFilename = `${sanitisedNoteDirName}/${sanitise(sanitize(fileName))}`;
+                
+                
                 fs.writeFileSync(sanitisedResourceFilename, fileContent);
               }
             }
