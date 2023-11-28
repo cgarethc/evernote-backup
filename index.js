@@ -126,9 +126,17 @@ catch (err) {
 
                   console.log(`Writing ${fileName} of type ${fileType} (${fileContent.length}B)`);
                   let sanitisedResourceFilename = `${sanitisedNoteDirName}/${sanitise(sanitize(fileName))}`;
+                  if(sanitisedResourceFilename.length > 255) {
+                    console.warn(`Filename too long, truncating to 255 characters: ${sanitisedResourceFilename}`);
+                    sanitisedResourceFilename = sanitisedResourceFilename.substring(0, 255);
+                  }
 
-
-                  fs.writeFileSync(sanitisedResourceFilename, fileContent);
+                  try {
+                    fs.writeFileSync(sanitisedResourceFilename, fileContent);
+                  }
+                  catch (err) {
+                    console.error(`Failed to write ${sanitisedResourceFilename}`, err.message);
+                  }
                 }
               }
               console.debug('Writing note');
