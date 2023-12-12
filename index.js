@@ -40,6 +40,10 @@ catch (err) {
       // use the list of notebooks from the config
       notebookNames = config.NOTEBOOKS;
     }
+    else if (config.IGNORE_NOTEBOOKS) {
+      // use all notebooks except the ones in the config
+      notebookNames = Object.keys(notebooksByName).filter(notebookName => !config.IGNORE_NOTEBOOKS.includes(notebookName));
+    }
     else {
       // use all notebooks
       notebookNames = Object.keys(notebooksByName);
@@ -126,7 +130,7 @@ catch (err) {
 
                   console.log(`Writing ${fileName} of type ${fileType} (${fileContent.length}B)`);
                   let sanitisedResourceFilename = `${sanitisedNoteDirName}/${sanitise(sanitize(fileName))}`;
-                  if(sanitisedResourceFilename.length > 255) {
+                  if (sanitisedResourceFilename.length > 255) {
                     console.warn(`Filename too long, truncating to 255 characters: ${sanitisedResourceFilename}`);
                     sanitisedResourceFilename = sanitisedResourceFilename.substring(0, 255);
                   }
