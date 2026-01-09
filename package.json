@@ -17,10 +17,11 @@
   },
   "homepage": "https://github.com/cgarethc/evernote-backup#readme",
   "dependencies": {
-    "evernote": "^2.0.5",
     "emoji-strip": "^1.0.1",
+    "evernote": "^2.0.5",
     "remove-accents": "^0.4.2",
-    "sanitize-filename": "^1.6.3"
+    "sanitize-filename": "^1.6.3",
+    "wanakana": "^5.3.1"
   },
   "devDependencies": {
     "esbuild": "^0.14.21"

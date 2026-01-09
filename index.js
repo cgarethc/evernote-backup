@@ -71,9 +71,16 @@ catch (err) {
           }
           else if (fs.existsSync(infoFileName)) {
             // get the last processed date that we store in the JSON info file
-            const info = JSON.parse(fs.readFileSync(infoFileName, 'utf8'));
-            console.debug('last processed', info.processed);
-            lastProcessedDate = new Date(info.processed);
+            try {
+              const info = JSON.parse(fs.readFileSync(infoFileName, 'utf8'));
+              console.debug('last processed', info.processed);
+              lastProcessedDate = new Date(info.processed);
+            }
+            catch (parseErr) {
+              console.warn(`Corrupt info file ${infoFileName}, removing and doing full backup`);
+              fs.unlinkSync(infoFileName);
+              // lastProcessedDate remains undefined, triggering a full backup
+            }
           }
 
           const count = await noteStore.findNoteCounts({ notebookGuid: notebook.guid }, false);

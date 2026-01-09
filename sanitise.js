@@ -1,5 +1,6 @@
 const emojiStrip = require('emoji-strip');
 const accents = require('remove-accents');
+const wanakana = require('wanakana');
 
 const macronMap = {
   'ā': 'aa',
@@ -50,12 +51,21 @@ exports.sanitiseOEMReserved = (text) => {
 }
 
 exports.sanitiseSmartQuotes = (text) => {
-  return text.replace(/[‘’]/g, "'").replace(/[“”]/g, '"');
+  return text.replace(/['']/g, "'").replace(/[""]/g, '"');
+};
+
+exports.sanitiseJapanese = (text) => {
+  // Convert hiragana and katakana to romaji
+  let result = wanakana.toRomaji(text);
+  // Remove any remaining kanji (CJK Unified Ideographs ranges)
+  result = result.replace(/[\u4e00-\u9faf\u3400-\u4dbf\uf900-\ufaff]/g, '');
+  return result;
 };
 
 exports.sanitise = (text) => {
   let sanitised = text;
-  sanitised = exports.sanitiseMacrons(text);
+  sanitised = exports.sanitiseMacrons(sanitised);
+  sanitised = exports.sanitiseJapanese(sanitised);
   sanitised = emojiStrip(sanitised);
   sanitised = accents.remove(sanitised);
   sanitised = exports.sanitiseSmartQuotes(sanitised);
